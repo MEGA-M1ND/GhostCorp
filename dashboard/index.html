@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SimCorp HQ — AI-Operated SaaS Startup</title>
+
+<!-- React 18 + Babel (in-browser JSX, no build step) + Chart.js, all via CDN -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #141b24; --panel2: #1b2430; --line: #243140;
+    --text: #e6edf3; --muted: #8b98a8; --green: #76b900; --red: #ff5d5d;
+    --blue: #4aa8ff; --amber: #ffb84d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 16px; }
+  header {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 16px;
+  }
+  .brand { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  .brand span { color: var(--green); }
+  .qpill {
+    background: var(--panel2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 4px 12px; font-weight: 700; color: var(--green);
+  }
+  .spacer { flex: 1; }
+  button, select {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 14px; font-size: 14px; cursor: pointer;
+    font-weight: 600; transition: .15s;
+  }
+  button:hover:not(:disabled), select:hover { border-color: var(--green); }
+  button.primary { background: var(--green); color: #0b0f14; border-color: var(--green); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .grid-kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+  }
+  .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+  .card .value { font-size: 28px; font-weight: 800; margin: 6px 0 2px; }
+  .card .sub { font-size: 13px; color: var(--muted); }
+  .up { color: var(--green); } .down { color: var(--red); }
+  .bar { height: 8px; border-radius: 6px; background: var(--panel2); overflow: hidden; margin-top: 6px; }
+  .bar > i { display: block; height: 100%; border-radius: 6px; }
+  .grid-chart { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .chart-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  .chart-card h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); font-weight: 700; }
+  .grid-bottom { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+  .feed { max-height: 320px; overflow-y: auto; }
+  .feed .row { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .feed .q { color: var(--green); font-weight: 700; min-width: 34px; }
+  .feed .agent { font-weight: 700; min-width: 86px; }
+  .feed .agent.CEO { color: var(--green); } .feed .agent.Competitor { color: var(--red); }
+  .feed .agent.Finance { color: var(--blue); } .feed .agent.Sales { color: var(--amber); }
+  .feed .agent.Product, .feed .agent.Marketing, .feed .agent.Customer { color: var(--muted); }
+  .feed .txt { color: var(--text); }
+  .ceo-panel { background: linear-gradient(160deg, #16210f, #141b24); border-color: #2c4012; }
+  .ceo-panel .strat { font-size: 18px; font-weight: 800; color: var(--green); text-transform: capitalize; }
+  .ceo-panel .reason { margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--text); }
+  .ceo-panel .move { margin-top: 12px; font-size: 13px; color: var(--red); }
+  h3.section { font-size: 14px; color: var(--muted); margin: 0 0 10px; font-weight: 700; }
+  @media (max-width: 900px) {
+    .grid-kpi { grid-template-columns: repeat(2, 1fr); }
+    .grid-chart, .grid-bottom { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+const API = "";  // same origin
+
+const fmtMoney = (n) => {
+  n = Number(n) || 0;
+  if (Math.abs(n) >= 1e6) return "$" + (n / 1e6).toFixed(2) + "M";
+  if (Math.abs(n) >= 1e3) return "$" + (n / 1e3).toFixed(1) + "K";
+  return "$" + n.toFixed(0);
+};
+const pct = (a, b) => (b ? ((a - b) / b) * 100 : 0);
+
+function Kpi({ label, value, children }) {
+  return (
+    <div className="card">
+      <div className="label">{label}</div>
+      <div className="value">{value}</div>
+      {children}
+    </div>
+  );
+}
+
+// A Chart.js line chart that creates once and updates on data change.
+function LineChart({ title, labels, series, color }) {
+  const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  useEffect(() => {
+    const ctx = canvasRef.current.getContext("2d");
+    chartRef.current = new Chart(ctx, {
+      type: "line",
+      data: { labels: [], datasets: [{ data: [], borderColor: color, backgroundColor: color + "22",
+        fill: true, tension: 0.3, pointRadius: 3, borderWidth: 2 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 350 },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: "#8b98a8" }, grid: { color: "#1b2430" } },
+          y: { ticks: { color: "#8b98a8" }, grid: { color: "#1b2430" } },
+        },
+      },
+    });
+    return () => chartRef.current.destroy();
+  }, []);
+  useEffect(() => {
+    const c = chartRef.current;
+    if (!c) return;
+    c.data.labels = labels;
+    c.data.datasets[0].data = series;
+    c.update();
+  }, [labels, series]);
+  return (
+    <div className="chart-card">
+      <h3>{title}</h3>
+      <div style={{ height: 220 }}><canvas ref={canvasRef}></canvas></div>
+    </div>
+  );
+}
+
+function App() {
+  const [state, setState] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const r = await fetch(API + "/api/state");
+      setState(await r.json());
+      setError(null);
+    } catch (e) { setError("API unreachable — is uvicorn running?"); }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const id = setInterval(refresh, 2000);  // poll every 2s
+    return () => clearInterval(id);
+  }, [refresh]);
+
+  const post = async (path) => {
+    setBusy(true);
+    try {
+      const r = await fetch(API + path, { method: "POST" });
+      setState(await r.json());
+    } catch (e) { setError("Request failed: " + path); }
+    setBusy(false);
+  };
+
+  if (!state) {
+    return <div className="wrap"><header><div className="brand">Sim<span>Corp</span> HQ</div></header>
+      <div className="card">{error || "Connecting to simulation…"}</div></div>;
+  }
+
+  const hist = state.history || [];
+  const prev = hist.length >= 2 ? hist[hist.length - 2] : null;
+  const arrDelta = prev ? pct(state.arr, prev.arr) : 0;
+  const custDelta = prev ? state.customers - prev.customers : 0;
+  const labels = hist.map((h) => "Q" + h.quarter);
+  const share = Number(state.market_share) || 0;
+  const compShare = Number(state.competitor_market_share) || 0;
+  const feed = [...(state.agent_log || [])].reverse();
+  const decision = state.ceo_decision || {};
+
+  return (
+    <div className="wrap">
+      <header>
+        <div className="brand">Sim<span>Corp</span> HQ</div>
+        <div className="qpill">Q{state.quarter}</div>
+        <div className="qpill" style={{ color: "#8b98a8" }}>{state.simulation_status}</div>
+        <div className="spacer"></div>
+        <button className="primary" disabled={busy} onClick={() => post("/api/next-tick")}>
+          {busy ? "Running…" : "▶ Next Quarter"}
+        </button>
+        <button disabled={busy} onClick={() => post("/api/reset")}>⟳ Reset</button>
+        <select value={state.scenario} disabled={busy}
+          onChange={(e) => post("/api/scenario/" + e.target.value)}>
+          <option value="mvp_launch">MVP Launch</option>
+          <option value="scale_up">Scale Up</option>
+          <option value="crisis">Crisis</option>
+        </select>
+      </header>
+
+      {error && <div className="card" style={{ marginBottom: 16, borderColor: "#ff5d5d" }}>{error}</div>}
+
+      <div className="grid-kpi">
+        <Kpi label="ARR" value={fmtMoney(state.arr)}>
+          <div className={"sub " + (arrDelta >= 0 ? "up" : "down")}>
+            {arrDelta >= 0 ? "↑" : "↓"} {Math.abs(arrDelta).toFixed(1)}% QoQ
+          </div>
+        </Kpi>
+        <Kpi label="Cash" value={fmtMoney(state.cash_balance)}>
+          <div className="sub">{Number(state.runway_months).toFixed(1)} mo runway</div>
+        </Kpi>
+        <Kpi label="Customers" value={Number(state.customers).toLocaleString()}>
+          <div className={"sub " + (custDelta >= 0 ? "up" : "down")}>
+            {custDelta >= 0 ? "↑" : "↓"} {Math.abs(custDelta)} net
+          </div>
+        </Kpi>
+        <Kpi label="Market Share" value={share.toFixed(1) + "%"}>
+          <div className="sub">SimCorp</div>
+          <div className="bar"><i style={{ width: Math.min(100, share) + "%", background: "var(--green)" }}></i></div>
+          <div className="sub" style={{ marginTop: 6 }}>Rival {compShare.toFixed(1)}%</div>
+          <div className="bar"><i style={{ width: Math.min(100, compShare) + "%", background: "var(--red)" }}></i></div>
+        </Kpi>
+      </div>
+
+      <div className="grid-chart">
+        <LineChart title="ARR Growth" labels={labels} series={hist.map((h) => h.arr)} color="#76b900" />
+        <LineChart title="Burn Rate" labels={labels} series={hist.map((h) => h.burn_rate)} color="#ff5d5d" />
+      </div>
+
+      <div className="grid-bottom">
+        <div className="card">
+          <h3 className="section">🤖 Agent Activity Feed</h3>
+          <div className="feed">
+            {feed.length === 0 && <div className="sub">No activity yet — press “Next Quarter”.</div>}
+            {feed.map((e, i) => (
+              <div className="row" key={i}>
+                <span className="q">Q{e.quarter}</span>
+                <span className={"agent " + e.agent}>{e.agent}</span>
+                <span className="txt">{e.action}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card ceo-panel">
+          <h3 className="section">CEO Strategy</h3>
+          <div className="strat">{(state.ceo_strategy || "—").replace(/_/g, " ")}</div>
+          {decision.pricing_action &&
+            <div className="sub" style={{ marginTop: 4 }}>Pricing: {decision.pricing_action.replace(/_/g, " ")}</div>}
+          {decision.key_directive && <div className="reason">“{decision.key_directive}”</div>}
+          <div className="reason" style={{ color: "#8b98a8" }}>{state.ceo_reasoning}</div>
+          <div className="move">⚔ {state.competitor_move}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
