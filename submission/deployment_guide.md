@@ -1,4 +1,4 @@
-# SimCorp — Deployment & Demo Guide
+# GhostCorp — Deployment & Demo Guide
 
 This guide covers setup, the 2-minute demo script, troubleshooting, and the
 submission checklist for the NVIDIA × OpenACC × Gnani.ai Agentic AI Hackathon 2026.
@@ -28,7 +28,7 @@ Edit `.env`:
 NVIDIA_API_KEY=nvapi-...
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_API_KEY=ls__...
-LANGCHAIN_PROJECT=simcorp-hackathon
+LANGCHAIN_PROJECT=ghostcorp-hackathon
 ```
 
 Verify connectivity:
@@ -61,7 +61,7 @@ Dashboard: **http://localhost:8000**
 
 | Time | Action | What to say |
 |---|---|---|
-| 0:00 | Dashboard open on **Scale Up** | "SimCorp is a SaaS company with zero human employees." |
+| 0:00 | Dashboard open on **Scale Up** | "GhostCorp is a SaaS company with zero human employees." |
 | 0:10 | Point to KPI cards | "ARR, customers, runway — every number is produced by autonomous AI agents on NVIDIA Nemotron." |
 | 0:30 | Select **Crisis**, press **Next Quarter** | "Let's drop them into a crisis." |
 | 0:40 | Activity feed shows competitor move | "The rival just raised \$15M Series A." |
@@ -69,7 +69,7 @@ Dashboard: **http://localhost:8000**
 | 1:05 | Press **Next Quarter** again | "Burn drops, runway extends — the plan is working." |
 | 1:30 | Open LangSmith trace | "Here's the full reasoning chain behind that decision." |
 | 1:45 | — | "Seven agents, one LangGraph supervisor loop, zero human decisions." |
-| 2:00 | — | "SimCorp. An entire company in a graph." |
+| 2:00 | — | "GhostCorp. An entire company in a graph." |
 
 **Rehearsal tip:** Reset and run Crisis 2–3 quarters beforehand so you know which
 quarter the pivot lands on for *your* key/model, then start the recording one
@@ -85,7 +85,7 @@ quarter earlier.
 | `429` from NIM | Built-in exponential-backoff retries; if persistent, slow down clicks (free tier = 40 RPM) |
 | Charts empty | Run at least one quarter; charts are driven by `history` |
 | No LangSmith traces | Ensure `LANGCHAIN_TRACING_V2=true` **and** `LANGCHAIN_API_KEY` are set before launch |
-| State persists across restarts unexpectedly | Snapshots live in `db/simcorp.db`; **Reset** clears them |
+| State persists across restarts unexpectedly | Snapshots live in `db/ghostcorp.db`; **Reset** clears them |
 
 ---
 

@@ -1,5 +1,5 @@
 """
-run.py — one-command startup for SimCorp.
+run.py — one-command startup for GhostCorp.
 
     python run.py
 
@@ -18,8 +18,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-HOST = os.getenv("SIMCORP_HOST", "127.0.0.1")
-PORT = int(os.getenv("SIMCORP_PORT", "8000"))
+HOST = os.getenv("GHOSTCORP_HOST", "127.0.0.1")
+PORT = int(os.getenv("GHOSTCORP_PORT", "8000"))
 URL = f"http://{HOST}:{PORT}"
 
 
@@ -33,7 +33,7 @@ def _preflight() -> None:
         print("\n  ✓  NVIDIA_API_KEY detected.")
     if os.getenv("LANGCHAIN_TRACING_V2", "").lower() == "true" and os.getenv("LANGCHAIN_API_KEY"):
         print("  ✓  LangSmith tracing enabled "
-              f"(project: {os.getenv('LANGCHAIN_PROJECT', 'simcorp-hackathon')}).\n")
+              f"(project: {os.getenv('LANGCHAIN_PROJECT', 'ghostcorp-hackathon')}).\n")
 
 
 def _open_browser() -> None:
@@ -48,7 +48,7 @@ def main() -> None:
     import uvicorn
 
     _preflight()
-    print(f"  SimCorp HQ  →  {URL}\n")
+    print(f"  GhostCorp HQ  →  {URL}\n")
     threading.Thread(target=_open_browser, daemon=True).start()
     uvicorn.run("api.main:app", host=HOST, port=PORT, reload=False)
 

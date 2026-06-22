@@ -10,13 +10,13 @@ output feeds Finance and Sales later in the same tick.
 from __future__ import annotations
 
 from core.config import fast_llm
-from core.state import SimCorpState
+from core.state import GhostCorpState
 from agents._common import ainvoke, clamp, parse_json
 
-SYSTEM_PROMPT = "You are SimCorp's Customer Agent. Output JSON only."
+SYSTEM_PROMPT = "You are GhostCorp's Customer Agent. Output JSON only."
 
 
-async def customer_agent(state: SimCorpState) -> dict:
+async def customer_agent(state: GhostCorpState) -> dict:
     nps, churn, score = state["nps_score"], state["churn_rate"], state["product_score"]
 
     # Deterministic fallback: product quality above/below 6 moves the needles.

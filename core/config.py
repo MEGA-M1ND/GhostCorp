@@ -1,5 +1,5 @@
 """
-core/config.py — NVIDIA NIM endpoints + model configuration for SimCorp.
+core/config.py — NVIDIA NIM endpoints + model configuration for GhostCorp.
 
 This module is the single source of truth for LLM clients. Every agent imports
 its client from here so that model selection, API keys, and tracing are
@@ -40,7 +40,7 @@ NVIDIA_API_KEY: str | None = os.getenv("NVIDIA_API_KEY")
 # LangSmith tracing is enabled purely via env vars (LANGCHAIN_TRACING_V2,
 # LANGCHAIN_API_KEY, LANGCHAIN_PROJECT). No code change needed — we just surface
 # the project name for logging/diagnostics.
-LANGCHAIN_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "simcorp-hackathon")
+LANGCHAIN_PROJECT: str = os.getenv("LANGCHAIN_PROJECT", "ghostcorp-hackathon")
 LANGSMITH_TRACING: bool = os.getenv("LANGCHAIN_TRACING_V2", "false").lower() == "true"
 
 

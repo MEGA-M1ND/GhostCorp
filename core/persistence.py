@@ -1,5 +1,5 @@
 """
-core/persistence.py — SQLite persistence for SimCorp (MVP).
+core/persistence.py — SQLite persistence for GhostCorp (MVP).
 
 Each completed quarter is appended to the `ticks` table as a full JSON snapshot
 of the state. This gives us both durability (state survives a restart) and a
@@ -13,11 +13,11 @@ import os
 import sqlite3
 from datetime import datetime, timezone
 
-from core.state import SimCorpState
+from core.state import GhostCorpState
 
-# Resolve the DB path from DATABASE_URL (sqlite:///./db/simcorp.db) with a sane
+# Resolve the DB path from DATABASE_URL (sqlite:///./db/ghostcorp.db) with a sane
 # default. We only support the sqlite scheme for the MVP.
-_DEFAULT_PATH = os.path.join("db", "simcorp.db")
+_DEFAULT_PATH = os.path.join("db", "ghostcorp.db")
 
 
 def _db_path() -> str:
@@ -52,7 +52,7 @@ def init_db() -> None:
         conn.commit()
 
 
-def persist_to_sqlite(state: SimCorpState) -> None:
+def persist_to_sqlite(state: GhostCorpState) -> None:
     """Append the current state as a snapshot row."""
     init_db()
     with _connect() as conn:
@@ -68,7 +68,7 @@ def persist_to_sqlite(state: SimCorpState) -> None:
         conn.commit()
 
 
-def load_latest_state() -> SimCorpState | None:
+def load_latest_state() -> GhostCorpState | None:
     """Return the most recently persisted state, or None if the DB is empty."""
     init_db()
     with _connect() as conn:

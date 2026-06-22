@@ -1,7 +1,7 @@
 """
 api/sim_service.py — the in-memory simulation service backing the REST API.
 
-Holds the single current SimCorpState, serializes ticks behind an asyncio.Lock
+Holds the single current GhostCorpState, serializes ticks behind an asyncio.Lock
 (LLM ticks take seconds; we never want two overlapping), and bridges to the
 scenario loader + SQLite persistence. On startup it restores the last persisted
 state so the simulation survives a server restart.

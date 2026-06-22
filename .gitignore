@@ -7,6 +7,9 @@ db/*.db-journal
 db/*.db-wal
 db/*.db-shm
 
+# GhostCorp runtime product workspace (its own nested git repo, built at runtime)
+workspace/
+
 # Python
 __pycache__/
 *.py[cod]

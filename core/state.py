@@ -1,5 +1,5 @@
 """
-core/state.py — SimCorpState, the single source of truth for the simulation.
+core/state.py — GhostCorpState, the single source of truth for the simulation.
 
 This TypedDict is the shared LangGraph state. Every agent reads from it and
 writes back to it; the dashboard renders it; SQLite persists it. Keeping the
@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import List, TypedDict
 
 
-class SimCorpState(TypedDict):
+class GhostCorpState(TypedDict):
     # --- Simulation metadata ---
     quarter: int                       # Current quarter (1-8)
     scenario: str                      # "mvp_launch" | "scale_up" | "crisis"
@@ -76,7 +76,7 @@ NUMERIC_FIELDS: tuple[str, ...] = (
 )
 
 
-def snapshot(state: SimCorpState) -> dict:
+def snapshot(state: GhostCorpState) -> dict:
     """A compact, chart-ready record of the quarter for `history`."""
     return {
         "quarter": state["quarter"],
@@ -94,13 +94,13 @@ def snapshot(state: SimCorpState) -> dict:
     }
 
 
-def new_state(**overrides) -> SimCorpState:
-    """Build a fully-populated SimCorpState, defaulting every field.
+def new_state(**overrides) -> GhostCorpState:
+    """Build a fully-populated GhostCorpState, defaulting every field.
 
     Scenarios call this with a handful of overrides so they never have to
     enumerate the entire schema and risk leaving a field undefined.
     """
-    base: SimCorpState = {
+    base: GhostCorpState = {
         "quarter": 1,
         "scenario": "mvp_launch",
         "simulation_status": "paused",

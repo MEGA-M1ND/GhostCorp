@@ -10,7 +10,7 @@ deterministic.
 from __future__ import annotations
 
 from core.config import fast_llm
-from core.state import SimCorpState
+from core.state import GhostCorpState
 from agents._common import ainvoke, clamp, log_agent, parse_json
 
 # Total addressable customers for the simulated market. Chosen so the scenarios'
@@ -38,14 +38,14 @@ CAC_ADJUSTMENT = {
 MONTHS_PER_QUARTER = 3
 
 SYSTEM_PROMPT = (
-    "You are the Sales Agent of SimCorp. Given the CEO strategy and budget, "
+    "You are the Sales Agent of GhostCorp. Given the CEO strategy and budget, "
     "estimate a lead_quality multiplier between 0.8 and 1.2 reflecting pipeline "
     "health, and write a 2-3 sentence sales_report. Output JSON only: "
     '{"lead_quality": float, "sales_report": "..."}'
 )
 
 
-async def sales_agent(state: SimCorpState) -> SimCorpState:
+async def sales_agent(state: GhostCorpState) -> GhostCorpState:
     strategy = state["ceo_strategy"] or "defensive_hold"
     decision = state.get("ceo_decision", {})
     alloc = decision.get("budget_allocation", {}) if isinstance(decision, dict) else {}

@@ -1,1 +1,1 @@
-"""SimCorp simulation package: scenarios, market engine, customer model."""
+"""GhostCorp simulation package: scenarios, market engine, customer model."""

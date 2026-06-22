@@ -9,13 +9,13 @@ state["cac_adjustment"]. Read-only on state; returns a result dict.
 from __future__ import annotations
 
 from core.config import fast_llm
-from core.state import SimCorpState
+from core.state import GhostCorpState
 from agents._common import ainvoke, clamp, parse_json
 
-SYSTEM_PROMPT = "You are SimCorp's Marketing Agent. Output JSON only."
+SYSTEM_PROMPT = "You are GhostCorp's Marketing Agent. Output JSON only."
 
 
-async def marketing_agent(state: SimCorpState) -> dict:
+async def marketing_agent(state: GhostCorpState) -> dict:
     decision = state.get("ceo_decision", {})
     strategy = state["ceo_strategy"] or "defensive_hold"
     budget = float(decision.get("budget_allocation", {}).get("marketing", 0.30)) if isinstance(decision, dict) else 0.30

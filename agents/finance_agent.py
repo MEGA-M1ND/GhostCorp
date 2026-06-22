@@ -10,7 +10,7 @@ is deterministic so the demo numbers stay sane and legible.
 from __future__ import annotations
 
 from core.config import fast_llm
-from core.state import SimCorpState
+from core.state import GhostCorpState
 from agents._common import ainvoke, clamp, log_agent, parse_json
 from tools.financial_tools import (
     cash_after_quarter,
@@ -39,7 +39,7 @@ HEADCOUNT_BANDS = {
 }
 
 SYSTEM_PROMPT = (
-    "You are the Finance Agent of SimCorp. Given the CEO strategy and current "
+    "You are the Finance Agent of GhostCorp. Given the CEO strategy and current "
     "financials, choose a quarterly growth_rate and headcount_growth within the "
     "allowed ranges, and write a 2-3 sentence finance_report. Output JSON only: "
     '{"growth_rate": float, "headcount_growth": float, "finance_report": "..."}'
@@ -50,7 +50,7 @@ def _band(strategy: str, bands: dict) -> tuple[float, float]:
     return bands.get(strategy, bands["defensive_hold"])
 
 
-async def finance_agent(state: SimCorpState) -> SimCorpState:
+async def finance_agent(state: GhostCorpState) -> GhostCorpState:
     strategy = state["ceo_strategy"] or "defensive_hold"
     g_lo, g_hi = _band(strategy, GROWTH_BANDS)
     h_lo, h_hi = _band(strategy, HEADCOUNT_BANDS)
