@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from ghostcorp import workspace as ws
 from ghostcorp.agents._common import log_agent
+from ghostcorp.agents.architect_agent import architect_agent
 from ghostcorp.agents.devops_agent import devops_agent
 from ghostcorp.agents.engineer_agent import engineer_agent
 from ghostcorp.agents.founder_agent import founder_agent
@@ -107,10 +108,13 @@ async def run_sprint(state: GhostCorpState) -> GhostCorpState:
     # 2) PM: turn the idea into a testable spec.
     await pm_agent(state)
 
-    # 3) Engineer <-> QA: build it for real until green (or give up).
+    # 3) Architect: define the data model + REST contract before any code.
+    await architect_agent(state)
+
+    # 4) Engineer <-> QA: build it for real until green (or give up).
     shipped = await build_feature(state)
 
-    # 4) DevOps: ship the green build, or mark the feature blocked.
+    # 5) DevOps: ship the green build, or mark the feature blocked.
     if shipped:
         await devops_agent(state)
     else:

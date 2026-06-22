@@ -18,8 +18,10 @@ produces a working product you can open in a browser.** Every sprint:
 - the **CEO** (Nemotron-70B) decides *what to build* — it invents the product,
   writes the vision, and prioritizes the backlog;
 - the **PM** turns the next idea into a testable spec;
-- the **Engineer** (Nemotron-70B) writes real FastAPI + SQLite code into a
-  git-backed workspace;
+- the **Architect** (Nemotron-70B) designs the SQLite schema + REST contract
+  *before any code is written* (a MetaGPT-style SOP that makes codegen reliable);
+- the **Engineer** (Nemotron-70B) writes real FastAPI + SQLite code against that
+  contract, into a git-backed workspace;
 - **QA** runs the **actual pytest suite** — green/red is real, not a score;
 - **DevOps** ships only green builds: bumps the version, writes the changelog,
   and commits to the product's own git history.
@@ -43,21 +45,21 @@ green build — so the product is **never left broken**.
    └───────────────────────────┬──────────────────────────────────┘
                                │ next feature
                                ▼
-   ┌──────────────┐   spec   ┌──────────────────────┐  real code  ┌────────────┐
-   │  PM (8B)     │ ───────▶ │  Engineer (70B)      │ ──────────▶ │ workspace/ │
-   │  acceptance  │          │  writes feature +    │             │ product/   │
-   │  criteria    │          │  pytest tests        │             │ (git repo) │
-   └──────────────┘          └─────────┬────────────┘             └─────┬──────┘
-                                       │                                 │
-                       fails ◀── real pytest ──┐                        │
-                       (retry) │   QA (8B)     │  green                 ▼
-                               └──────┬────────┘            ┌────────────────────┐
-                                      │ approved            │  Live product      │
-                                      ▼                     │  (uvicorn :8100)   │
-                              ┌──────────────┐  commit      │  served in an      │
-                              │ DevOps (8B)  │ ───────────▶ │  iframe preview    │
-                              │ version·ship │              └────────────────────┘
-                              └──────────────┘
+   ┌──────────┐ spec ┌────────────┐ schema+ ┌──────────────┐ code ┌────────────┐
+   │  PM (8B) │ ───▶ │ Architect  │ contract│ Engineer(70B)│ ───▶ │ workspace/ │
+   │ criteria │      │ (70B) data │ ──────▶ │ writes code +│      │ product/   │
+   │          │      │ model+API  │         │ pytest tests │      │ (git repo) │
+   └──────────┘      └────────────┘         └──────┬───────┘      └─────┬──────┘
+                                                   │                     │
+                                   fails ◀── real pytest ──┐            │
+                                   (retry) │   QA (8B)     │ green       ▼
+                                           └──────┬────────┘    ┌────────────────────┐
+                                                  │ approved    │  Live product      │
+                                                  ▼             │  (uvicorn :8100)   │
+                                          ┌──────────────┐ commit│  served in an      │
+                                          │ DevOps (8B)  │ ────▶ │  iframe preview    │
+                                          │ version·ship │       └────────────────────┘
+                                          └──────────────┘
 
    SHARED STATE : GhostCorpState (sprint, backlog, version, changelog, files, tests)
    EXECUTION    : real subprocess pytest runner (the credibility anchor)
@@ -66,7 +68,7 @@ green build — so the product is **never left broken**.
 ```
 
 **Sprint order** (one tick = one sprint):
-`CEO founds/prioritizes → PM specs → Engineer ⇄ QA (build + real tests) → DevOps ships`
+`CEO founds/prioritizes → PM specs → Architect designs → Engineer ⇄ QA (build + real tests) → DevOps ships`
 
 ---
 
@@ -74,7 +76,7 @@ green build — so the product is **never left broken**.
 
 | Layer | Technology |
 |---|---|
-| CEO + Engineer LLM | `nvidia/llama-3.1-nemotron-70b-instruct` (NVIDIA NIM) |
+| CEO + Architect + Engineer LLM | `nvidia/llama-3.1-nemotron-70b-instruct` (NVIDIA NIM) |
 | PM / QA / DevOps LLM | `nvidia/llama-3.1-nemotron-nano-8b-v1` (NVIDIA NIM) |
 | LLM client | `langchain-nvidia-ai-endpoints` (`ChatNVIDIA`) |
 | Test execution | real `pytest` in a sandboxed subprocess |
@@ -142,6 +144,9 @@ run — the company just can't generate code until you add a key.
 - **Fixed shape, free idea.** The CEO chooses *what* to build; the *technical
   shape* is fixed (FastAPI + SQLite + auto-mounted feature modules) so codegen
   and tests stay tractable no matter what product it dreams up.
+- **Design before code.** The Architect emits an explicit schema + endpoint
+  contract that the Engineer implements and QA tests against — a MetaGPT-style
+  SOP that sharply raises the first-attempt pass rate over free-form codegen.
 - **Auto-wiring.** The app discovers any `features/<name>.py` exposing a
   `router`, so the Engineer writes one self-contained module instead of editing
   shared files — far more reliable than multi-file surgery.
@@ -164,7 +169,7 @@ ghostcorp/
   executor.py    REAL pytest runner (subprocess + timeout + parsed verdict)
   state.py       GhostCorpState (sprint, backlog, version, changelog, tests…)
   llms.py        role-based NIM clients (Founder/Engineer 70B · PM/QA/DevOps 8B)
-  agents/        founder · pm · engineer · qa · devops
+  agents/        founder · pm · architect · engineer · qa · devops
   sprint.py      build loop (Engineer⇄QA) + full run_sprint orchestration
   product_server.py   runs the AI's product as a live subprocess (preview)
   server.py      FastAPI control plane (state/run/reset)
