@@ -20,6 +20,10 @@ engineer_llm = _LazyLLM(lambda: get_ceo_llm(temperature=0.2, max_tokens=3000))
 # Product Manager — turns direction into a crisp spec (8B).
 pm_llm = _LazyLLM(lambda: get_fast_llm(temperature=0.4, max_tokens=700))
 
+# Architect — designs the data model + REST contract before code (70B; design
+# quality directly drives codegen reliability).
+architect_llm = _LazyLLM(lambda: get_ceo_llm(temperature=0.3, max_tokens=1300))
+
 # QA — reviews the real test verdict and writes a short note (8B).
 qa_llm = _LazyLLM(lambda: get_fast_llm(temperature=0.3, max_tokens=400))
 

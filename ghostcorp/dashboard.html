@@ -51,6 +51,7 @@
   .tag { font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; height:fit-content;
          flex-shrink:0; min-width:64px; text-align:center; }
   .tag.CEO{background:#2a2140;color:var(--purple);} .tag.PM{background:#1e2e40;color:var(--blue);}
+  .tag.Architect{background:#14302e;color:#3fd0c0;}
   .tag.Engineer{background:#23301a;color:var(--green);} .tag.QA{background:#3a2a18;color:var(--amber);}
   .tag.DevOps{background:#3a1d1d;color:var(--red);}
   .feed-item .msg { line-height:1.45; }
@@ -143,9 +144,10 @@
 </div>
 
 <script>
-const AVATARS = {CEO:'🧠', PM:'📋', Engineer:'⚙️', QA:'🔬', DevOps:'🚀'};
+const AVATARS = {CEO:'🧠', PM:'📋', Architect:'📐', Engineer:'⚙️', QA:'🔬', DevOps:'🚀'};
 const ROLE_DESC = {CEO:'Founder · picks the product', PM:'Specs the feature',
-  Engineer:'Writes the code', QA:'Runs the real tests', DevOps:'Ships to prod'};
+  Architect:'Designs schema + API', Engineer:'Writes the code',
+  QA:'Runs the real tests', DevOps:'Ships to prod'};
 let lastVersion = null, busy = false;
 
 function esc(s){ return (s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
@@ -165,7 +167,7 @@ async function reset(){
 function renderTeam(log){
   const last = {};
   for(const e of log){ last[e.agent] = e.action; }
-  const order = ['CEO','PM','Engineer','QA','DevOps'];
+  const order = ['CEO','PM','Architect','Engineer','QA','DevOps'];
   document.getElementById('team').innerHTML = order.map(role => `
     <div class="agent">
       <div class="av">${AVATARS[role]||'🤖'}</div>

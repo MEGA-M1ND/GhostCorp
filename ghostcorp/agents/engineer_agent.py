@@ -67,6 +67,38 @@ def _allowed(path: str) -> bool:
     return path in _ALLOWED_FILES or path.startswith(_ALLOWED_PREFIXES)
 
 
+def _design_block(design: dict) -> str:
+    """Render the Architect's contract as explicit build instructions."""
+    if not design or not design.get("endpoints"):
+        return ""
+    lines = [
+        "DESIGN CONTRACT (implement EXACTLY — endpoint paths, methods, and table",
+        "schema must match; your tests must verify these endpoints):",
+        f"Module: features/{design.get('module', 'feature')}.py  "
+        f"(tests: tests/test_{design.get('module', 'feature')}.py)",
+    ]
+    if design.get("tables"):
+        lines.append("Tables:")
+        for t in design["tables"]:
+            cols = ", ".join(t.get("columns", []))
+            lines.append(f"- {t.get('name', '?')}({cols})")
+    lines.append("Endpoints:")
+    for e in design["endpoints"]:
+        req = e.get("request")
+        res = e.get("response")
+        extra = []
+        if req:
+            extra.append(f"request={req}")
+        if res:
+            extra.append(f"response={res}")
+        meta = ("  " + "  ".join(extra)) if extra else ""
+        lines.append(f"- {e.get('method', 'GET')} {e.get('path', '/api/')}{meta}"
+                     f"  — {e.get('description', '')}")
+    if design.get("notes"):
+        lines.append(f"Notes: {design['notes']}")
+    return "\n".join(lines)
+
+
 def _build_user_prompt(state: GhostCorpState, failing_output: str | None) -> str:
     feature = state["current_feature"]
     criteria = feature.get("acceptance_criteria", [])
@@ -85,9 +117,13 @@ def _build_user_prompt(state: GhostCorpState, failing_output: str | None) -> str
         f"Description: {feature.get('description', '')}",
         "Acceptance criteria:",
         crit_text,
-        "",
-        f"EXISTING FEATURE MODULES: {', '.join(existing) if existing else 'none'}",
     ]
+
+    design_block = _design_block(feature.get("design", {}))
+    if design_block:
+        parts += ["", design_block]
+
+    parts += ["", f"EXISTING FEATURE MODULES: {', '.join(existing) if existing else 'none'}"]
 
     if failing_output:
         # Retry: show the failure and the current code so the Engineer can fix it.
