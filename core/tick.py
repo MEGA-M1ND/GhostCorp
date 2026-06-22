@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 
 from core.state import SimCorpState, snapshot, NUMERIC_FIELDS
+from agents.competitor_agent import competitor_agent
 from agents.ceo_agent import ceo_agent
 from agents.finance_agent import finance_agent
 from agents.sales_agent import sales_agent
@@ -24,10 +25,10 @@ async def run_tick(state: SimCorpState) -> SimCorpState:
     """Advance the simulation by exactly one quarter, in place + returned."""
     state["simulation_status"] = "running"
 
-    # Step 1 (Stage 3): Competitor agent moves first to set the context.
-    # state = await competitor_agent(state)
+    # Step 1: Competitor agent moves first to set the context (drama).
+    state = await competitor_agent(state)
 
-    # Step 2: CEO responds to the current state (Nemotron-70B, sequential).
+    # Step 2: CEO responds to the competitor + current state (Nemotron-70B).
     state = await ceo_agent(state)
 
     # Step 3 (Stage 4): simplified agents (product/marketing/customer) run here
@@ -49,6 +50,32 @@ async def run_quarters(state: SimCorpState, n: int) -> SimCorpState:
     """Run `n` consecutive quarter ticks on a state."""
     for _ in range(n):
         state = await run_tick(state)
+    return state
+
+
+async def run_4_quarters(scenario: str = "crisis") -> SimCorpState:
+    """Load a scenario and run 4 quarters, narrating the adversarial loop.
+
+    Prints, per quarter: the competitor's move and the CEO's strategy +
+    reasoning — so you can see the CEO visibly react to competitor pressure.
+    This backs the Stage 3 approval gate.
+    """
+    from simulation.scenarios import load_scenario
+
+    state = load_scenario(scenario)
+    print(f"\n########## SCENARIO: {scenario} (starting Q{state['quarter']}) ##########")
+    for _ in range(4):
+        q = state["quarter"]
+        before_runway = state["runway_months"]
+        state = await run_tick(state)
+        print(f"\n----- Q{q} -----")
+        print(f"  Competitor : {state['competitor_move']}")
+        print(f"  CEO strategy: {state['ceo_strategy']}  (pricing: "
+              f"{state['ceo_decision'].get('pricing_action')})")
+        print(f"  CEO reasoning: {state['ceo_reasoning']}")
+        print(f"  Runway: {before_runway:.1f}mo -> {state['runway_months']:.1f}mo | "
+              f"ARR ${state['arr']:,.0f} | churn {state['churn_rate']:.1f}% | "
+              f"share {state['market_share']:.1f}% vs {state['competitor_market_share']:.1f}%")
     return state
 
 
