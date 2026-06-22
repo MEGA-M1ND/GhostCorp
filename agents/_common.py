@@ -1,5 +1,5 @@
 """
-agents/_common.py — shared helpers for every SimCorp agent.
+agents/_common.py — shared helpers for every GhostCorp agent.
 
 Centralizes the three things every agent needs:
   1. Robust JSON parsing with a guaranteed fallback (LLMs occasionally wrap
@@ -24,7 +24,7 @@ from tenacity import (
     wait_exponential,
 )
 
-from core.state import SimCorpState
+from core.state import GhostCorpState
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +113,7 @@ async def ainvoke(llm: Any, system: str, user: str) -> str:
 # Activity logging
 # ---------------------------------------------------------------------------
 
-def log_agent(state: SimCorpState, agent: str, action: str) -> None:
+def log_agent(state: GhostCorpState, agent: str, action: str) -> None:
     """Append a structured entry to the dashboard activity feed (in place)."""
     state["agent_log"].append(
         {

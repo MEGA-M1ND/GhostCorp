@@ -9,13 +9,13 @@ never mutate shared state concurrently.
 from __future__ import annotations
 
 from core.config import fast_llm
-from core.state import SimCorpState
+from core.state import GhostCorpState
 from agents._common import ainvoke, clamp, parse_json
 
-SYSTEM_PROMPT = "You are SimCorp's Product Agent. Output JSON only."
+SYSTEM_PROMPT = "You are GhostCorp's Product Agent. Output JSON only."
 
 
-async def product_agent(state: SimCorpState) -> dict:
+async def product_agent(state: GhostCorpState) -> dict:
     decision = state.get("ceo_decision", {})
     directive = decision.get("key_directive", "") if isinstance(decision, dict) else ""
     budget = float(decision.get("budget_allocation", {}).get("product", 0.30)) if isinstance(decision, dict) else 0.30

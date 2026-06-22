@@ -1,4 +1,4 @@
-"""Pre-built SimCorp scenarios (initial states for the simulation)."""
+"""Pre-built GhostCorp scenarios (initial states for the simulation)."""
 
 from importlib import import_module
 

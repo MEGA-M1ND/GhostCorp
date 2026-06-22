@@ -1,1 +1,1 @@
-"""SimCorp FastAPI app: REST endpoints + dashboard serving."""
+"""GhostCorp FastAPI app: REST endpoints + dashboard serving."""

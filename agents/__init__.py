@@ -1,1 +1,1 @@
-"""SimCorp agents: CEO supervisor + worker agents (finance, sales, ...)."""
+"""GhostCorp agents: CEO supervisor + worker agents (finance, sales, ...)."""

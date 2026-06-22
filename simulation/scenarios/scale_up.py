@@ -1,7 +1,7 @@
 """
 Scenario 2: Scale Up.
 
-ARR ~$1.8M, a healthy customer base, ~18 months of runway, and SimCorp is
+ARR ~$1.8M, a healthy customer base, ~18 months of runway, and GhostCorp is
 winning: it leads the competitor on market share. The competitor is active but
 on the back foot. The growth-mode counterpoint to the Crisis scenario.
 """

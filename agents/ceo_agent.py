@@ -9,10 +9,10 @@ quarter. This is the only agent on the 70B model — judges will check.
 from __future__ import annotations
 
 from core.config import ceo_llm
-from core.state import SimCorpState
+from core.state import GhostCorpState
 from agents._common import ainvoke, log_agent, parse_json
 
-SYSTEM_PROMPT = """You are the CEO of SimCorp, an AI-operated SaaS startup. You make strategic decisions each quarter based on financial performance, market conditions, and competitor moves.
+SYSTEM_PROMPT = """You are the CEO of GhostCorp, an AI-operated SaaS startup. You make strategic decisions each quarter based on financial performance, market conditions, and competitor moves.
 
 Your decisions drive ALL other agents. Be decisive, specific, and data-driven.
 Think like a Series A startup CEO who is accountable to investors.
@@ -52,7 +52,7 @@ _FALLBACK = {
 }
 
 
-def _build_context(state: SimCorpState) -> str:
+def _build_context(state: GhostCorpState) -> str:
     """The decision context handed to the CEO each quarter."""
     return (
         f"Quarter: {state['quarter']} | Scenario: {state['scenario']}\n"
@@ -68,7 +68,7 @@ def _build_context(state: SimCorpState) -> str:
     )
 
 
-def _enforce_guards(decision: dict, state: SimCorpState) -> dict:
+def _enforce_guards(decision: dict, state: GhostCorpState) -> dict:
     """Apply the CEO's non-negotiable critical behaviors after parsing.
 
     The prompt asks the model to obey these; we enforce them deterministically
@@ -111,7 +111,7 @@ def _enforce_guards(decision: dict, state: SimCorpState) -> dict:
     return decision
 
 
-async def ceo_agent(state: SimCorpState) -> SimCorpState:
+async def ceo_agent(state: GhostCorpState) -> GhostCorpState:
     """Run the CEO: produce a strategic directive and write it into state."""
     context = _build_context(state)
     try:

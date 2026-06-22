@@ -1,5 +1,5 @@
 """
-api/main.py — the SimCorp FastAPI application.
+api/main.py — the GhostCorp FastAPI application.
 
 Run with:  uvicorn api.main:app --reload
 
@@ -17,7 +17,7 @@ from fastapi.responses import FileResponse
 
 from api.routes import metrics, simulation
 
-app = FastAPI(title="SimCorp", description="AI-operated SaaS startup simulation")
+app = FastAPI(title="GhostCorp", description="AI-operated SaaS startup simulation")
 
 app.add_middleware(
     CORSMiddleware,

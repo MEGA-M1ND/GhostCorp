@@ -1,7 +1,7 @@
 """
 api/routes/simulation.py — simulation control endpoints.
 
-  GET  /api/state            full SimCorpState
+  GET  /api/state            full GhostCorpState
   POST /api/start            mark the simulation running
   POST /api/next-tick        run one quarter (async; serialized)
   POST /api/reset            reset to current scenario's initial state

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import asyncio
 
-from core.state import SimCorpState, snapshot, NUMERIC_FIELDS
+from core.state import GhostCorpState, snapshot, NUMERIC_FIELDS
 from core.persistence import persist_to_sqlite
 from agents._common import log_agent
 from agents.competitor_agent import competitor_agent
@@ -28,7 +28,7 @@ from agents.customer_agent import customer_agent
 MAX_QUARTERS = 8
 
 
-def merge_agent_results(state: SimCorpState, results: list[dict]) -> SimCorpState:
+def merge_agent_results(state: GhostCorpState, results: list[dict]) -> GhostCorpState:
     """Apply the parallel agents' result dicts to state and log each.
 
     The simplified agents are read-only on state and return
@@ -40,7 +40,7 @@ def merge_agent_results(state: SimCorpState, results: list[dict]) -> SimCorpStat
     return state
 
 
-async def run_tick(state: SimCorpState) -> SimCorpState:
+async def run_tick(state: GhostCorpState) -> GhostCorpState:
     """Advance the simulation by exactly one quarter, in place + returned."""
     state["simulation_status"] = "running"
 
@@ -73,14 +73,14 @@ async def run_tick(state: SimCorpState) -> SimCorpState:
     return state
 
 
-async def run_quarters(state: SimCorpState, n: int) -> SimCorpState:
+async def run_quarters(state: GhostCorpState, n: int) -> GhostCorpState:
     """Run `n` consecutive quarter ticks on a state."""
     for _ in range(n):
         state = await run_tick(state)
     return state
 
 
-async def run_4_quarters(scenario: str = "crisis") -> SimCorpState:
+async def run_4_quarters(scenario: str = "crisis") -> GhostCorpState:
     """Load a scenario and run 4 quarters, narrating the adversarial loop.
 
     Prints, per quarter: the competitor's move and the CEO's strategy +
@@ -106,7 +106,7 @@ async def run_4_quarters(scenario: str = "crisis") -> SimCorpState:
     return state
 
 
-def diff_numeric(before: SimCorpState, after: SimCorpState) -> dict:
+def diff_numeric(before: GhostCorpState, after: GhostCorpState) -> dict:
     """Return {field: (before, after)} for numeric KPIs that changed."""
     out = {}
     for field in NUMERIC_FIELDS:
@@ -116,7 +116,7 @@ def diff_numeric(before: SimCorpState, after: SimCorpState) -> dict:
     return out
 
 
-def print_state_diff(before: SimCorpState, after: SimCorpState) -> None:
+def print_state_diff(before: GhostCorpState, after: GhostCorpState) -> None:
     """Pretty-print the KPI delta produced by a tick (used by the demo)."""
     print(f"\n=== Quarter {before['quarter']} -> {after['quarter']} ===")
     print(f"CEO strategy : {after['ceo_strategy']}")

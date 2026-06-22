@@ -1,5 +1,5 @@
 """
-tests/test_agents.py — offline smoke tests for the SimCorp agent pipeline.
+tests/test_agents.py — offline smoke tests for the GhostCorp agent pipeline.
 
 Runs WITHOUT an NVIDIA API key by stubbing every agent's LLM call with canned
 JSON, so the deterministic orchestration (tick order, parallel merge, guards,

@@ -1,7 +1,7 @@
 """
 ghostcorp/agents/_common.py — shared helpers for the AI staff.
 
-Reuses the generic JSON-parsing + retry-wrapped LLM call from the SimCorp
+Reuses the generic JSON-parsing + retry-wrapped LLM call from the GhostCorp
 agents._common (they're domain-agnostic), and adds GhostCorp-specific helpers:
 sprint-aware activity logging and a robust parser for the Engineer's file blocks.
 """

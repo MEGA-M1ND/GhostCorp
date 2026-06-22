@@ -2,11 +2,11 @@
 simulation/market_engine.py — deterministic market simulation helpers.
 
 Two responsibilities:
-  1. The competitor move pool and weighted selection logic (exploit SimCorp's
+  1. The competitor move pool and weighted selection logic (exploit GhostCorp's
      weaknesses).
   2. Applying a chosen competitor move's *effects* on the shared state — both
      the competitor's own market share and the adversarial pressure it puts on
-     SimCorp (churn, NPS, product). Running this BEFORE the CEO each quarter is
+     GhostCorp (churn, NPS, product). Running this BEFORE the CEO each quarter is
      what makes the CEO visibly react.
 
 Everything here is deterministic given its inputs (the only randomness is the
@@ -18,7 +18,7 @@ from __future__ import annotations
 import random
 
 from agents._common import clamp
-from core.state import SimCorpState
+from core.state import GhostCorpState
 
 COMPETITOR_MOVES = {
     "price_undercut_20pct": "Competitor slashed prices by 20% — targeting your mid-market segment",
@@ -30,7 +30,7 @@ COMPETITOR_MOVES = {
     "hold": "Competitor made no significant moves this quarter — focus on internal execution",
 }
 
-# Moves considered "aggressive" — used when SimCorp is winning (share > 30%).
+# Moves considered "aggressive" — used when GhostCorp is winning (share > 30%).
 AGGRESSIVE_MOVES = [
     "price_undercut_20pct",
     "feature_launch_ai",
@@ -39,7 +39,7 @@ AGGRESSIVE_MOVES = [
     "free_tier_launch",
 ]
 
-# Default selection weights when SimCorp is neither dominant nor fragile.
+# Default selection weights when GhostCorp is neither dominant nor fragile.
 _DEFAULT_WEIGHTS = {
     "price_undercut_20pct": 3,
     "feature_launch_ai": 3,
@@ -51,12 +51,12 @@ _DEFAULT_WEIGHTS = {
 }
 
 
-def select_competitor_move(state: SimCorpState, rng: random.Random | None = None) -> str:
-    """Pick a competitor move key based on SimCorp's current weaknesses.
+def select_competitor_move(state: GhostCorpState, rng: random.Random | None = None) -> str:
+    """Pick a competitor move key based on GhostCorp's current weaknesses.
 
     Rules (per spec):
-      - SimCorp market_share > 30%  -> aggressive moves only.
-      - SimCorp runway_months < 9   -> exploit with funding_round.
+      - GhostCorp market_share > 30%  -> aggressive moves only.
+      - GhostCorp runway_months < 9   -> exploit with funding_round.
       - otherwise                   -> weighted random selection.
     """
     rng = rng or random
@@ -72,7 +72,7 @@ def select_competitor_move(state: SimCorpState, rng: random.Random | None = None
     return rng.choices(moves, weights=weights, k=1)[0]
 
 
-def apply_competitor_effects(state: SimCorpState, move: str) -> None:
+def apply_competitor_effects(state: GhostCorpState, move: str) -> None:
     """Mutate state to reflect a competitor move's market impact (in place).
 
     Effects are intentionally modest and bounded so several quarters of pressure

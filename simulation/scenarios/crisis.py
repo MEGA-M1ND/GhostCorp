@@ -3,7 +3,7 @@ Scenario 3: Crisis — the DEMO HERO.
 
 Q3 of a company under siege: ARR has stagnated, the competitor just closed a
 $15M Series A, runway is down to ~9 months, churn is creeping up, and the rival
-already holds more market share than SimCorp. The CEO must pivot or die — and
+already holds more market share than GhostCorp. The CEO must pivot or die — and
 the deterministic guards make a cost_cut/pivot decision land within a quarter.
 """
 

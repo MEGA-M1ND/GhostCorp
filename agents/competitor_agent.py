@@ -2,16 +2,16 @@
 agents/competitor_agent.py — the adversarial Competitor. Nemotron-nano-8B.
 
 Runs FIRST each quarter to set the drama before the CEO decides. The LLM acts as
-a rival strategist: it reads SimCorp's state, picks the move from the pool that
-best exploits SimCorp's weakness, and writes a short taunt. Hard selection rules
-(dominant SimCorp -> aggressive; fragile runway -> funding_round) are enforced
+a rival strategist: it reads GhostCorp's state, picks the move from the pool that
+best exploits GhostCorp's weakness, and writes a short taunt. Hard selection rules
+(dominant GhostCorp -> aggressive; fragile runway -> funding_round) are enforced
 deterministically so the adversary is reliably threatening on demo day.
 """
 
 from __future__ import annotations
 
 from core.config import fast_llm
-from core.state import SimCorpState
+from core.state import GhostCorpState
 from agents._common import ainvoke, log_agent, parse_json
 from simulation.market_engine import (
     COMPETITOR_MOVES,
@@ -21,14 +21,14 @@ from simulation.market_engine import (
 )
 
 SYSTEM_PROMPT = (
-    "You are the rival CEO competing against SimCorp. Each quarter you pick ONE "
-    "move from the allowed list that best exploits SimCorp's current weakness "
+    "You are the rival CEO competing against GhostCorp. Each quarter you pick ONE "
+    "move from the allowed list that best exploits GhostCorp's current weakness "
     "(low runway, high churn, big market share, weak product). Output JSON only: "
     '{"move": "<one move key>", "taunt": "one short sentence"}'
 )
 
 
-async def competitor_agent(state: SimCorpState) -> SimCorpState:
+async def competitor_agent(state: GhostCorpState) -> GhostCorpState:
     move_keys = ", ".join(COMPETITOR_MOVES.keys())
     # Deterministic recommendation based on the selection rules; used as the
     # fallback and to override the LLM when a hard rule applies.
@@ -36,7 +36,7 @@ async def competitor_agent(state: SimCorpState) -> SimCorpState:
 
     fallback = {"move": forced, "taunt": ""}
     user = (
-        f"SimCorp state — market_share: {state['market_share']:.1f}%, "
+        f"GhostCorp state — market_share: {state['market_share']:.1f}%, "
         f"runway: {state['runway_months']:.1f}mo, churn: {state['churn_rate']:.1f}%, "
         f"NPS: {state['nps_score']:.0f}, product_score: {state['product_score']:.1f}\n"
         f"Allowed moves: {move_keys}\n"

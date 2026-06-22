@@ -1,5 +1,5 @@
 """
-core/graph.py — LangGraph StateGraph definition for SimCorp.
+core/graph.py — LangGraph StateGraph definition for GhostCorp.
 
 Stage 2 wires the money loop as a linear supervisor pipeline:
 
@@ -13,7 +13,7 @@ graph is the canonical LangGraph artifact for LangSmith tracing and inspection.
 
 from __future__ import annotations
 
-from core.state import SimCorpState
+from core.state import GhostCorpState
 from agents.ceo_agent import ceo_agent
 from agents.finance_agent import finance_agent
 from agents.sales_agent import sales_agent
@@ -32,14 +32,14 @@ def _memory_checkpointer():
 
 
 def build_graph(checkpointer=None):
-    """Compile and return the SimCorp StateGraph.
+    """Compile and return the GhostCorp StateGraph.
 
     Built lazily (function, not module-level) so importing this module never
     requires an API key or a running NIM endpoint.
     """
     from langgraph.graph import StateGraph, START, END
 
-    graph = StateGraph(SimCorpState)
+    graph = StateGraph(GhostCorpState)
     graph.add_node("ceo", ceo_agent)
     graph.add_node("finance", finance_agent)
     graph.add_node("sales", sales_agent)
