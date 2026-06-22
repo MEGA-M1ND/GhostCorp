@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GhostCorp · Mission Control</title>
+<style>
+  :root {
+    --bg:#0a0e14; --panel:#11161f; --panel2:#161d29; --line:#222c3a;
+    --txt:#e6edf3; --dim:#8b98a8; --green:#76b900; --blue:#4ea1ff;
+    --amber:#f0a020; --red:#ff5c5c; --purple:#b48cff;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+         font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; font-size:14px; }
+  a { color:var(--blue); }
+  header { display:flex; align-items:center; gap:16px; padding:14px 20px;
+           background:linear-gradient(90deg,#11161f,#0a0e14); border-bottom:1px solid var(--line);
+           position:sticky; top:0; z-index:10; }
+  header .logo { font-size:24px; }
+  header h1 { font-size:17px; margin:0; letter-spacing:.5px; }
+  header .product { margin-left:6px; color:var(--dim); }
+  header .product b { color:var(--green); }
+  .badge { padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600;
+           border:1px solid var(--line); }
+  .badge.ver { color:var(--green); border-color:var(--green); }
+  .badge.status { text-transform:capitalize; }
+  .badge.idle { color:var(--dim); }
+  .badge.planning,.badge.building,.badge.shipping { color:var(--amber); border-color:var(--amber); }
+  .badge.blocked { color:var(--red); border-color:var(--red); }
+  .spacer { flex:1; }
+  button { background:var(--panel2); color:var(--txt); border:1px solid var(--line);
+           padding:8px 14px; border-radius:7px; cursor:pointer; font-weight:600; font-size:13px; }
+  button:hover { border-color:var(--green); }
+  button.primary { background:var(--green); color:#0a0e14; border-color:var(--green); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .grid { display:grid; grid-template-columns:300px 1fr 1fr; gap:14px; padding:14px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .panel h2 { margin:0; padding:11px 14px; font-size:12px; text-transform:uppercase;
+              letter-spacing:1px; color:var(--dim); border-bottom:1px solid var(--line);
+              display:flex; justify-content:space-between; }
+  .panel .body { padding:12px 14px; max-height:340px; overflow:auto; }
+  .agent { display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); }
+  .agent:last-child { border-bottom:none; }
+  .agent .av { width:34px; height:34px; border-radius:8px; display:flex; align-items:center;
+               justify-content:center; font-size:17px; flex-shrink:0; background:var(--panel2); }
+  .agent .role { font-weight:600; }
+  .agent .act { color:var(--dim); font-size:12px; margin-top:2px; line-height:1.4; }
+  .feed-item { padding:7px 0; border-bottom:1px solid var(--line); display:flex; gap:9px; }
+  .feed-item:last-child { border-bottom:none; }
+  .tag { font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; height:fit-content;
+         flex-shrink:0; min-width:64px; text-align:center; }
+  .tag.CEO{background:#2a2140;color:var(--purple);} .tag.PM{background:#1e2e40;color:var(--blue);}
+  .tag.Engineer{background:#23301a;color:var(--green);} .tag.QA{background:#3a2a18;color:var(--amber);}
+  .tag.DevOps{background:#3a1d1d;color:var(--red);}
+  .feed-item .msg { line-height:1.45; }
+  .feed-item .ts { color:#56627a; font-size:11px; }
+  .item { padding:8px 0; border-bottom:1px solid var(--line); }
+  .item:last-child { border-bottom:none; }
+  .chip { font-size:10px; padding:2px 8px; border-radius:5px; font-weight:600; }
+  .chip.pending{background:#222c3a;color:var(--dim);} .chip.shipped{background:#23301a;color:var(--green);}
+  .chip.blocked{background:#3a1d1d;color:var(--red);}
+  .files { font-family:ui-monospace,Menlo,monospace; font-size:12px; color:var(--dim); }
+  .files div { padding:2px 0; }
+  pre.diff { font-family:ui-monospace,Menlo,monospace; font-size:11.5px; line-height:1.5;
+             margin:0; white-space:pre-wrap; word-break:break-word; }
+  .diff .add{color:var(--green);} .diff .del{color:var(--red);} .diff .meta{color:var(--blue);}
+  .preview-wrap { padding:0; }
+  iframe { width:100%; height:360px; border:none; background:#0d1117; }
+  .full { grid-column:1 / -1; }
+  .muted { color:var(--dim); font-style:italic; }
+  .running-dot { width:8px; height:8px; border-radius:50%; background:var(--green);
+                 display:inline-block; animation:pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:.3;} 50%{opacity:1;} }
+  .ver-row { display:flex; justify-content:space-between; gap:8px; }
+  .stat { display:inline-block; margin-right:14px; }
+  .stat b { color:var(--green); font-size:16px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">👻</span>
+  <h1>GHOSTCORP</h1>
+  <span class="product"><span id="prodName">—</span> · <span id="prodVision" class="muted"></span></span>
+  <span class="badge ver" id="ver">v0.0.0</span>
+  <span class="badge status idle" id="status">idle</span>
+  <span class="spacer"></span>
+  <span id="runIndicator"></span>
+  <button id="run1" class="primary" onclick="run(1)">▶ Run Sprint</button>
+  <button id="run3" onclick="run(3)">▶▶ Run 3</button>
+  <button id="reset" onclick="reset()">↻ Reset</button>
+</header>
+
+<div style="padding:6px 20px;color:var(--dim);border-bottom:1px solid var(--line);">
+  <span class="stat">Sprint <b id="sprintNum">0</b></span>
+  <span class="stat">Shipped <b id="shippedCount">0</b></span>
+  <span class="stat">Files <b id="fileCount">0</b></span>
+  <span class="stat">Tests <b id="testCount">0</b></span>
+  <span class="stat">Backlog <b id="backlogCount">0</b></span>
+</div>
+
+<div class="grid">
+  <!-- LEFT -->
+  <div>
+    <div class="panel">
+      <h2>The Team</h2>
+      <div class="body" id="team"></div>
+    </div>
+    <div class="panel" style="margin-top:14px;">
+      <h2>Backlog</h2>
+      <div class="body" id="backlog"></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div>
+    <div class="panel">
+      <h2>Activity Feed <span id="feedLive"></span></h2>
+      <div class="body" id="feed" style="max-height:520px;"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+    <div class="panel preview-wrap">
+      <h2>Live Product Preview <span id="previewState" class="muted"></span></h2>
+      <iframe id="preview" title="product preview"></iframe>
+    </div>
+    <div class="panel" style="margin-top:14px;">
+      <h2>Changelog</h2>
+      <div class="body" id="changelog" style="max-height:200px;"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM: code -->
+  <div class="panel full">
+    <h2>Codebase <span id="codeTitle" class="muted"></span></h2>
+    <div class="body" style="display:grid;grid-template-columns:240px 1fr;gap:18px;max-height:360px;">
+      <div class="files" id="files"></div>
+      <pre class="diff" id="diff"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+const AVATARS = {CEO:'🧠', PM:'📋', Engineer:'⚙️', QA:'🔬', DevOps:'🚀'};
+const ROLE_DESC = {CEO:'Founder · picks the product', PM:'Specs the feature',
+  Engineer:'Writes the code', QA:'Runs the real tests', DevOps:'Ships to prod'};
+let lastVersion = null, busy = false;
+
+function esc(s){ return (s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+async function run(n){
+  if(busy) return;
+  await fetch('/api/sprint/run?n='+n, {method:'POST'});
+  tick();
+}
+async function reset(){
+  if(busy) return;
+  await fetch('/api/reset', {method:'POST'});
+  lastVersion = null;
+  tick();
+}
+
+function renderTeam(log){
+  const last = {};
+  for(const e of log){ last[e.agent] = e.action; }
+  const order = ['CEO','PM','Engineer','QA','DevOps'];
+  document.getElementById('team').innerHTML = order.map(role => `
+    <div class="agent">
+      <div class="av">${AVATARS[role]||'🤖'}</div>
+      <div>
+        <div class="role">${role}</div>
+        <div class="act">${esc(last[role] || ROLE_DESC[role])}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderFeed(log){
+  const items = [...log].reverse().map(e => `
+    <div class="feed-item">
+      <span class="tag ${e.agent}">${e.agent}</span>
+      <div><div class="msg">${esc(e.action)}</div>
+      <div class="ts">sprint ${e.sprint} · ${(e.timestamp||'').slice(11,19)}</div></div>
+    </div>`).join('');
+  document.getElementById('feed').innerHTML = items || '<div class="muted">No activity yet. Hit “Run Sprint”.</div>';
+}
+
+function renderBacklog(b){
+  document.getElementById('backlog').innerHTML = b.length ? b.map(i => `
+    <div class="item ver-row">
+      <span>${esc(i.title)}</span>
+      <span class="chip ${i.status}">${i.status}</span>
+    </div>`).join('') : '<div class="muted">CEO hasn\'t planned yet.</div>';
+}
+
+function renderChangelog(c){
+  document.getElementById('changelog').innerHTML = c.length ? [...c].reverse().map(x => `
+    <div class="item">
+      <div class="ver-row"><b style="color:var(--green)">v${x.version}</b><span class="ts">sprint ${x.sprint} · ${esc(x.commit||'')}</span></div>
+      <div style="color:var(--dim);font-size:12px;margin-top:2px;">${esc(x.summary||x.title)}</div>
+    </div>`).join('') : '<div class="muted">Nothing shipped yet.</div>';
+}
+
+function renderDiff(diff){
+  if(!diff){ document.getElementById('diff').innerHTML = '<span class="muted">No changes yet.</span>'; return; }
+  const html = esc(diff).split('\n').map(l => {
+    if(l.startsWith('+')&&!l.startsWith('+++')) return `<span class="add">${l}</span>`;
+    if(l.startsWith('-')&&!l.startsWith('---')) return `<span class="del">${l}</span>`;
+    if(l.startsWith('diff ')||l.startsWith('@@')||l.startsWith('+++')||l.startsWith('---')) return `<span class="meta">${l}</span>`;
+    return l;
+  }).join('\n');
+  document.getElementById('diff').innerHTML = html;
+}
+
+async function tick(){
+  let s;
+  try { s = await (await fetch('/api/state')).json(); } catch(e){ return; }
+  busy = s.running;
+
+  document.getElementById('prodName').textContent = s.product_name || 'Awaiting CEO…';
+  document.getElementById('prodVision').textContent = s.product_vision || '';
+  document.getElementById('ver').textContent = 'v' + (s.version||'0.0.0');
+  const st = document.getElementById('status');
+  st.textContent = s.running ? s.status : s.status;
+  st.className = 'badge status ' + (s.status||'idle');
+
+  document.getElementById('sprintNum').textContent = s.sprint;
+  document.getElementById('shippedCount').textContent = (s.changelog||[]).length;
+  document.getElementById('fileCount').textContent = (s.files||[]).length;
+  document.getElementById('testCount').textContent = (s.test_results&&s.test_results.passed_count)||0;
+  document.getElementById('backlogCount').textContent = (s.backlog||[]).filter(i=>i.status==='pending').length;
+
+  renderTeam(s.agent_log||[]);
+  renderFeed(s.agent_log||[]);
+  renderBacklog(s.backlog||[]);
+  renderChangelog(s.changelog||[]);
+  renderDiff(s.last_diff);
+  document.getElementById('files').innerHTML = (s.files||[]).map(f=>`<div>${esc(f)}</div>`).join('');
+  document.getElementById('codeTitle').textContent = s.current_feature&&s.current_feature.title ? '· building: '+s.current_feature.title : '';
+
+  // Buttons + indicators
+  for(const id of ['run1','run3','reset']) document.getElementById(id).disabled = s.running;
+  document.getElementById('runIndicator').innerHTML = s.running ? '<span class="running-dot"></span> working…' : '';
+  document.getElementById('feedLive').innerHTML = s.running ? '<span class="running-dot"></span>' : '';
+
+  // Live preview: (re)load iframe when version changes or first load
+  const pv = document.getElementById('preview');
+  document.getElementById('previewState').textContent = s.preview_live ? '· live' : (s.preview_url ? '· starting…' : '· disabled');
+  if(s.preview_url && s.version !== lastVersion){
+    lastVersion = s.version;
+    pv.src = s.preview_url + '?v=' + encodeURIComponent(s.version);
+  }
+}
+
+tick();
+setInterval(tick, 1500);
+</script>
+</body>
+</html>
