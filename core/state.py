@@ -40,6 +40,10 @@ class SimCorpState(TypedDict):
     # --- Agent decisions (populated each tick) ---
     ceo_strategy: str                  # CEO's strategic directive (text)
     ceo_reasoning: str                 # CEO's full reasoning chain (for LangSmith)
+    ceo_decision: dict                 # Machine-readable CEO output consumed by
+                                       # downstream agents within the same tick:
+                                       # {strategy, pricing_action, budget_allocation,
+                                       #  key_directive}
     competitor_move: str               # Competitor's action this quarter
     finance_report: str                # Finance Agent summary
     sales_report: str                  # Sales Agent summary
@@ -113,6 +117,7 @@ def new_state(**overrides) -> SimCorpState:
         "product_score": 0.0,
         "ceo_strategy": "",
         "ceo_reasoning": "",
+        "ceo_decision": {},
         "competitor_move": "hold",
         "finance_report": "",
         "sales_report": "",
