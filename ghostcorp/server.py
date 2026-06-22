@@ -20,6 +20,7 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from ghostcorp.product_server import ProductServer
@@ -28,7 +29,20 @@ from ghostcorp.sprint import MAX_BUILD_ATTEMPTS, init_company, run_sprint
 _DASHBOARD = Path(__file__).resolve().parent / "dashboard.html"
 _NO_PREVIEW = os.getenv("GHOSTCORP_NO_PREVIEW") == "1"
 
+# Allow a separately-hosted frontend (e.g. an Emergent-built dashboard) to call
+# the API cross-origin. Defaults to "*"; set GHOSTCORP_CORS_ORIGINS to a
+# comma-separated allowlist (e.g. "http://localhost:5173,https://my.app") to lock
+# it down.
+_CORS_ORIGINS = [o.strip() for o in os.getenv("GHOSTCORP_CORS_ORIGINS", "*").split(",") if o.strip()]
+
 app = FastAPI(title="GhostCorp Mission Control")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Single in-memory company. Reset re-seeds it.
 _state = init_company(force=True)
