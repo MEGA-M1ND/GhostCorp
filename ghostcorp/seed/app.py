@@ -23,17 +23,37 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
+import json  # noqa: E402
+
 from fastapi import FastAPI  # noqa: E402
 from fastapi.responses import HTMLResponse  # noqa: E402
 
 from db import init_db  # noqa: E402
 
-# Product identity — overwritten by the DevOps agent once the CEO picks a product.
-PRODUCT = {
-    "name": "Untitled Product",
-    "vision": "The AI founders have not chosen a product yet.",
-    "version": "0.0.0",
-}
+
+def _load_product() -> dict:
+    """Product identity lives in product.json, written by the agents once the
+    CEO picks a product and bumped by DevOps on each ship."""
+    path = os.path.join(BASE_DIR, "product.json")
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            return {
+                "name": data.get("name", "Untitled Product"),
+                "vision": data.get("vision", ""),
+                "version": data.get("version", "0.0.0"),
+            }
+        except (json.JSONDecodeError, OSError):
+            pass
+    return {
+        "name": "Untitled Product",
+        "vision": "The AI founders have not chosen a product yet.",
+        "version": "0.0.0",
+    }
+
+
+PRODUCT = _load_product()
 
 app = FastAPI(title="GhostCorp Product")
 init_db()
