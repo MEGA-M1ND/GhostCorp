@@ -1,28 +1,34 @@
 """
 GhostCorp product — seed application.
 
-This is the empty-but-runnable skeleton the AI company starts from on Sprint 0.
-The agents grow it feature by feature: new routes, models, validation, and UI.
-It is a real FastAPI + SQLite app — every feature the Engineer adds is testable
-with real pytest, and the whole thing serves a live UI for the demo preview.
+The empty-but-runnable skeleton the AI company starts from on Sprint 0. The
+Engineer agent grows it by dropping self-contained feature modules into
+`features/`; this app auto-discovers any module there that defines a `router`
+(a FastAPI APIRouter) and mounts it — so the Engineer never has to edit app.py.
 
-Conventions the agents follow (keep these stable so codegen stays tractable):
-  - All persistence goes through a single SQLite database (see `db_path()`).
-  - Feature endpoints live under `/api/...` and return JSON.
-  - `PRODUCT` metadata (name/vision) is set once the CEO picks the product.
+Conventions the agents rely on:
+  - Feature modules live in features/<name>.py and expose `router = APIRouter()`.
+  - Endpoints live under /api/... and return JSON.
+  - Persistence goes through `from db import connect` (shared SQLite).
 """
 
 from __future__ import annotations
 
+import importlib
 import os
-import sqlite3
-
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+import pkgutil
+import sys
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
-# Product identity — overwritten by DevOps once the CEO names the product.
+from fastapi import FastAPI  # noqa: E402
+from fastapi.responses import HTMLResponse  # noqa: E402
+
+from db import init_db  # noqa: E402
+
+# Product identity — overwritten by the DevOps agent once the CEO picks a product.
 PRODUCT = {
     "name": "Untitled Product",
     "vision": "The AI founders have not chosen a product yet.",
@@ -30,47 +36,40 @@ PRODUCT = {
 }
 
 app = FastAPI(title="GhostCorp Product")
-
-
-def db_path() -> str:
-    """Single source of truth for the product database location."""
-    return os.path.join(BASE_DIR, "product.db")
-
-
-def connect() -> sqlite3.Connection:
-    conn = sqlite3.connect(db_path())
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init_db() -> None:
-    """Create baseline tables. Agents add their own tables alongside these."""
-    with connect() as conn:
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT)"
-        )
-        conn.commit()
-
-
-# Initialize on import so `TestClient(app)` and `uvicorn` both have a ready DB.
 init_db()
 
 
 @app.get("/health")
 def health() -> dict:
-    """Liveness probe used by the executor and DevOps agent."""
     return {"status": "ok", "product": PRODUCT["name"], "version": PRODUCT["version"]}
 
 
 @app.get("/api/product")
 def product_info() -> dict:
-    """The product's identity — rendered in the live preview header."""
     return PRODUCT
 
 
 @app.get("/", response_class=HTMLResponse)
 def index() -> str:
-    """Serve the product's single-page UI (grown by the agents)."""
     path = os.path.join(BASE_DIR, "templates", "index.html")
     with open(path, "r", encoding="utf-8") as fh:
         return fh.read()
+
+
+def _load_features() -> None:
+    """Auto-discover and mount every feature module's router."""
+    features_dir = os.path.join(BASE_DIR, "features")
+    if not os.path.isdir(features_dir):
+        return
+    import features  # noqa: F401  (ensures the package is importable)
+
+    for _, name, _ in pkgutil.iter_modules([features_dir]):
+        module = importlib.import_module(f"features.{name}")
+        router = getattr(module, "router", None)
+        if router is not None:
+            app.include_router(router)
+
+
+# A broken feature raises here -> the whole suite goes red, which is exactly the
+# signal QA needs. DevOps only ships green, so the product never stays broken.
+_load_features()

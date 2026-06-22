@@ -121,7 +121,13 @@ def commit(message: str) -> str | None:
 
 
 def working_diff() -> str:
-    """Uncommitted changes (what the Engineer just wrote, pre-ship)."""
+    """Uncommitted changes vs the last commit (what the Engineer just wrote).
+
+    Uses intent-to-add (`git add -N`) so brand-new feature files show up as
+    additions in the diff — a plain `git diff` ignores untracked files. This
+    does not fully stage content, so a later `add -A` + commit still works.
+    """
+    _git(["add", "-A", "-N"])
     return _git(["diff"]).stdout
 
 
@@ -140,6 +146,16 @@ def git_log(n: int = 25) -> list[dict]:
             sha, msg = line.split("\x1f", 1)
             log.append({"sha": sha, "message": msg})
     return log
+
+
+def revert_uncommitted() -> None:
+    """Discard all uncommitted changes + untracked files.
+
+    Used when the Engineer<->QA loop gives up on a feature, so the product stays
+    on its last green commit rather than carrying broken code.
+    """
+    _git(["reset", "-q", "--hard", "HEAD"])
+    _git(["clean", "-fdq"])
 
 
 def reset_workspace() -> None:
