@@ -12,6 +12,13 @@ from __future__ import annotations
 from core.config import fast_llm
 from core.state import SimCorpState
 from agents._common import ainvoke, clamp, log_agent, parse_json
+from tools.financial_tools import (
+    cash_after_quarter,
+    mrr_to_arr,
+    project_burn,
+    project_mrr,
+    runway_months,
+)
 
 # Quarterly net-MRR growth bands per CEO strategy (low, high).
 GROWTH_BANDS = {
@@ -37,8 +44,6 @@ SYSTEM_PROMPT = (
     "allowed ranges, and write a 2-3 sentence finance_report. Output JSON only: "
     '{"growth_rate": float, "headcount_growth": float, "finance_report": "..."}'
 )
-
-MONTHS_PER_QUARTER = 3
 
 
 def _band(strategy: str, bands: dict) -> tuple[float, float]:
@@ -77,16 +82,12 @@ async def finance_agent(state: SimCorpState) -> SimCorpState:
     growth_rate = clamp(out.get("growth_rate", g_mid), g_lo, g_hi)
     headcount_growth = clamp(out.get("headcount_growth", h_mid), h_lo, h_hi)
 
-    # --- Deterministic KPI math ---
-    old_mrr = state["mrr"]
-    new_mrr = old_mrr * (1 + growth_rate) * (1 - state["churn_rate"] / 100)
-    new_arr = new_mrr * 12
-
-    new_burn = max(0.0, state["burn_rate"] * (1 + headcount_growth))
-    # Cash flows over the quarter: gain revenue, pay the burn.
-    cash_delta = (new_mrr - new_burn) * MONTHS_PER_QUARTER
-    new_cash = state["cash_balance"] + cash_delta
-    runway = (new_cash / new_burn) if new_burn > 1 else 999.0
+    # --- Deterministic KPI math (shared tools) ---
+    new_mrr = project_mrr(state["mrr"], growth_rate, state["churn_rate"])
+    new_arr = mrr_to_arr(new_mrr)
+    new_burn = project_burn(state["burn_rate"], headcount_growth)
+    new_cash = cash_after_quarter(state["cash_balance"], new_mrr, new_burn)
+    runway = runway_months(new_cash, new_burn)
 
     state["mrr"] = round(new_mrr, 2)
     state["arr"] = round(new_arr, 2)

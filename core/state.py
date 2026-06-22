@@ -25,6 +25,8 @@ class SimCorpState(TypedDict):
     cash_balance: float                # Current cash on hand ($)
     runway_months: float               # cash_balance / burn_rate
     cac: float                         # Customer Acquisition Cost ($)
+    cac_adjustment: float              # Transient: Marketing Agent's CAC multiplier
+                                       # for this quarter, consumed by Sales.
 
     # --- Market KPIs ---
     customers: int                     # Total active customers
@@ -108,6 +110,7 @@ def new_state(**overrides) -> SimCorpState:
         "cash_balance": 0.0,
         "runway_months": 0.0,
         "cac": 0.0,
+        "cac_adjustment": 1.0,
         "customers": 0,
         "churn_rate": 0.0,
         "nps_score": 0.0,

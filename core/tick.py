@@ -15,10 +15,29 @@ from __future__ import annotations
 import asyncio
 
 from core.state import SimCorpState, snapshot, NUMERIC_FIELDS
+from core.persistence import persist_to_sqlite
+from agents._common import log_agent
 from agents.competitor_agent import competitor_agent
 from agents.ceo_agent import ceo_agent
 from agents.finance_agent import finance_agent
 from agents.sales_agent import sales_agent
+from agents.product_agent import product_agent
+from agents.marketing_agent import marketing_agent
+from agents.customer_agent import customer_agent
+
+MAX_QUARTERS = 8
+
+
+def merge_agent_results(state: SimCorpState, results: list[dict]) -> SimCorpState:
+    """Apply the parallel agents' result dicts to state and log each.
+
+    The simplified agents are read-only on state and return
+    {agent, action, updates}; merging here keeps all mutation single-threaded.
+    """
+    for result in results:
+        state.update(result.get("updates", {}))  # type: ignore[arg-type]
+        log_agent(state, result["agent"], result["action"])
+    return state
 
 
 async def run_tick(state: SimCorpState) -> SimCorpState:
@@ -31,17 +50,25 @@ async def run_tick(state: SimCorpState) -> SimCorpState:
     # Step 2: CEO responds to the competitor + current state (Nemotron-70B).
     state = await ceo_agent(state)
 
-    # Step 3 (Stage 4): simplified agents (product/marketing/customer) run here
-    # in parallel via asyncio.gather.
+    # Step 3: simplified agents run in PARALLEL (nano-8B, fast, read-only).
+    results = await asyncio.gather(
+        product_agent(state),
+        marketing_agent(state),
+        customer_agent(state),
+    )
+    state = merge_agent_results(state, results)
 
-    # Steps 4 & 5: Finance then Sales — order matters (Sales reads new burn).
+    # Steps 4 & 5: Finance then Sales — order matters (Sales reads new burn +
+    # the Customer agent's fresh churn).
     state = await finance_agent(state)
     state = await sales_agent(state)
 
     # Step 6: Housekeeping. Snapshot the quarter that just ran, then advance.
     state["history"].append(snapshot(state))
     state["quarter"] += 1
-    # persist_to_sqlite(state)  # Stage 4
+    if state["quarter"] > MAX_QUARTERS:
+        state["simulation_status"] = "completed"
+    persist_to_sqlite(state)
 
     return state
 

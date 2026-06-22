@@ -79,7 +79,11 @@ async def sales_agent(state: SimCorpState) -> SimCorpState:
     churned = state["customers"] * (state["churn_rate"] / 100)
     new_customers = max(0, round(state["customers"] - churned + gross_new))
 
-    new_cac = round(cac * CAC_ADJUSTMENT.get(strategy, 1.0), 2)
+    # Final CAC = strategy effect x this quarter's Marketing Agent adjustment,
+    # clamped to a sane band so compounding can't run away.
+    marketing_adj = float(state.get("cac_adjustment", 1.0))
+    new_cac = clamp(cac * CAC_ADJUSTMENT.get(strategy, 1.0) * marketing_adj, 200, 10_000)
+    new_cac = round(new_cac, 2)
     market_share = round(new_customers / TOTAL_ADDRESSABLE_CUSTOMERS * 100, 1)
 
     net_added = new_customers - state["customers"]
