@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GhostCorp Product</title>
+  <style>
+    body { margin:0; font-family: system-ui, sans-serif; background:#0d1117; color:#e6edf3;
+           display:flex; min-height:100vh; align-items:center; justify-content:center; text-align:center; }
+    .box { max-width:560px; padding:32px; }
+    h1 { font-size:28px; margin:0 0 8px; }
+    .v { color:#76b900; font-weight:700; }
+    p { color:#8b98a8; line-height:1.6; }
+    .ghost { font-size:56px; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="ghost">👻</div>
+    <h1 id="name">Untitled Product</h1>
+    <p id="vision">The AI founders have not chosen a product yet.</p>
+    <p class="v" id="version">v0.0.0</p>
+  </div>
+  <script>
+    // The agents extend this UI as features ship. Baseline: show product identity.
+    fetch('/api/product').then(r => r.json()).then(p => {
+      document.getElementById('name').textContent = p.name;
+      document.getElementById('vision').textContent = p.vision;
+      document.getElementById('version').textContent = 'v' + p.version;
+      document.title = p.name;
+    }).catch(() => {});
+  </script>
+</body>
+</html>
